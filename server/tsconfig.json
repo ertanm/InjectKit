@@ -11,13 +11,12 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "*.ts",
-    "__tests__/**/*.ts"
+    "*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "**/*.test.ts",
+    "__tests__",
     "vitest.config.ts"
   ]
 }
