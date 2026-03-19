@@ -6,18 +6,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: path.join(__dirname, "..", ".env") })
 
 async function main() {
+  const bcrypt = await import("bcryptjs")
   const { PrismaPg } = await import("@prisma/adapter-pg")
-  const mod = await import("../generated/prisma/client.js")
+  const mod = await import("../server/generated/prisma/client.js")
   const PrismaClient = mod.PrismaClient
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
   const prisma = new PrismaClient({ adapter })
 
+  const passwordHash = await bcrypt.default.hash("devpassword", 12)
   const user = await prisma.user.upsert({
-    where: { clerkId: "dev-user" },
-    create: { clerkId: "dev-user" },
+    where: { email: "dev@localhost" },
+    create: { email: "dev@localhost", passwordHash },
     update: {},
   })
-  console.log("Seeded dev user for PromptVault")
+  console.log("Seeded dev user for PromptVault (dev@localhost / devpassword)")
 
   const spaces = await Promise.all(
     ["General", "Code Review", "Creative Writing"].map((name) =>

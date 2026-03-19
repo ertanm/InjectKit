@@ -1,3 +1,5 @@
+import { clearAuth, getToken } from "~lib/auth"
+
 const RAW_API_BASE = process.env.PLASMO_PUBLIC_API_URL ?? "http://localhost:3000"
 
 if (
@@ -29,15 +31,8 @@ export type Prompt = {
 
 type PromptListResponse = { data: Prompt[]; nextCursor?: string }
 
-let _getToken: (() => Promise<string | null>) | null = null
-
-export function setTokenGetter(fn: () => Promise<string | null>) {
-  _getToken = fn
-}
-
-async function authHeaders(): Promise<HeadersInit> {
-  if (!_getToken) return {}
-  const token = await _getToken()
+async function getAuthHeaders(): Promise<HeadersInit> {
+  const token = await getToken()
   if (!token) return {}
   return { Authorization: `Bearer ${token}` }
 }
@@ -45,9 +40,12 @@ async function authHeaders(): Promise<HeadersInit> {
 async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   const headers = {
     ...((init?.headers as Record<string, string>) ?? {}),
-    ...(await authHeaders()),
+    ...(await getAuthHeaders()),
   }
   const res = await fetch(resolveApiUrl(path), { ...init, headers })
+  if (res.status === 401) {
+    await clearAuth()
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     throw new ApiError(res.status, body.error ?? `Request failed: ${res.status}`)
@@ -63,6 +61,28 @@ export class ApiError extends Error {
     super(message)
     this.name = "ApiError"
   }
+}
+
+export async function login(email: string, password: string): Promise<{ token: string; user: { id: string; email: string } }> {
+  const res = await fetch(resolveApiUrl("/api/auth/login"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new ApiError(res.status, (data as { error?: string }).error ?? "Login failed")
+  return data as { token: string; user: { id: string; email: string } }
+}
+
+export async function register(email: string, password: string): Promise<{ token: string; user: { id: string; email: string } }> {
+  const res = await fetch(resolveApiUrl("/api/auth/register"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new ApiError(res.status, (data as { error?: string }).error ?? "Registration failed")
+  return data as { token: string; user: { id: string; email: string } }
 }
 
 export async function fetchSpaces(): Promise<Space[]> {

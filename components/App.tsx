@@ -1,13 +1,6 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import {
-  Show,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-  useAuth,
-} from "@clerk/chrome-extension"
 import { EmptyState } from "~components/EmptyState"
 import { LoadingSkeleton } from "~components/LoadingSkeleton"
 import { Modal } from "~components/Modal"
@@ -23,65 +16,19 @@ import {
   deleteSpace,
   fetchPrompts,
   fetchSpaces,
-  setTokenGetter,
   type Prompt,
   type Space,
   updatePrompt,
   updateSpace,
 } from "~lib/api"
+import { clearAuth } from "~lib/auth"
 import "~style.css"
 
-function AuthSync() {
-  const { getToken } = useAuth()
-
-  useEffect(() => {
-    setTokenGetter(async () => {
-      const token = await getToken()
-      return token ?? null
-    })
-  }, [getToken])
-
-  return null
+type AppProps = {
+  onSignOut: () => void
 }
 
-function SignedOutScreen() {
-  return (
-    <div className="flex h-[600px] w-[400px] flex-col items-center justify-center overflow-hidden bg-[var(--pv-bg)] px-8 text-center">
-      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--pv-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--pv-accent-soft)_80%,transparent)]">
-        <svg
-          className="h-7 w-7 text-[var(--pv-accent-strong)]"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={1.5}>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 2.5l8 3.5v5c0 5.25-3.4 10.2-8 11.5C7.4 21.2 4 16.25 4 11V6l8-3.5z"
-          />
-        </svg>
-      </div>
-      <h1 className="mb-1 text-lg font-semibold tracking-tight text-[var(--pv-text)]">
-        PromptVault
-      </h1>
-      <p className="mb-6 text-sm text-[var(--pv-text-muted)]">Sign in to continue</p>
-      <div className="flex flex-col gap-3">
-        <SignInButton mode="modal">
-          <button type="button" className="pv-button-primary pv-focus w-full">
-            Sign in
-          </button>
-        </SignInButton>
-        <SignUpButton mode="modal">
-          <button type="button" className="pv-button-ghost pv-focus w-full">
-            Create account
-          </button>
-        </SignUpButton>
-      </div>
-    </div>
-  )
-}
-
-export function App() {
+export function App({ onSignOut }: AppProps) {
   const [spaces, setSpaces] = useState<Space[]>([])
   const [prompts, setPrompts] = useState<Prompt[]>([])
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null)
@@ -361,45 +308,51 @@ export function App() {
   )
 
   return (
-    <>
-      <Show when="signed-out">
-        <SignedOutScreen />
-      </Show>
-      <Show when="signed-in">
-        <AuthSync />
-        <div
-          onKeyDown={handleKeyDown}
-          className="flex h-[600px] w-[400px] flex-col overflow-hidden bg-[var(--pv-bg)] text-[var(--pv-text)]">
-          <OnboardingTour />
+    <div
+      onKeyDown={handleKeyDown}
+      className="flex h-[600px] w-[400px] flex-col overflow-hidden bg-[var(--pv-bg)] text-[var(--pv-text)]">
+      <OnboardingTour />
 
-          <div className="shrink-0 border-b border-[var(--pv-border)] px-4 pb-4 pt-4">
-            <div className="mb-3 flex items-center gap-2">
-              <div className="flex shrink-0 items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[var(--pv-accent)] shadow-sm shadow-[color-mix(in_srgb,var(--pv-accent)_30%,transparent)]">
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24">
-                    <path
-                      fill="white"
-                      d="M12 2.5l8 3.5v5c0 5.25-3.4 10.2-8 11.5C7.4 21.2 4 16.25 4 11V6l8-3.5z"
-                    />
-                    <path
-                      d="M9.5 12.5l2-2.5M11.5 14h2.5"
-                      fill="none"
-                      stroke="var(--pv-accent)"
-                      strokeWidth={2.2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-                <h1 className="text-sm font-semibold tracking-tight">PromptVault</h1>
-              </div>
-              <div className="min-w-0 flex-1">
-                <SearchBar value={searchQuery} onChange={setSearchQuery} />
-              </div>
-              <div className="shrink-0">
-                <UserButton afterSignOutUrl={chrome.runtime.getURL("popup.html")} />
-              </div>
+      <div className="shrink-0 border-b border-[var(--pv-border)] px-4 pb-4 pt-4">
+        <div className="mb-3 flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[var(--pv-accent)] shadow-sm shadow-[color-mix(in_srgb,var(--pv-accent)_30%,transparent)]">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24">
+                <path
+                  fill="white"
+                  d="M12 2.5l8 3.5v5c0 5.25-3.4 10.2-8 11.5C7.4 21.2 4 16.25 4 11V6l8-3.5z"
+                />
+                <path
+                  d="M9.5 12.5l2-2.5M11.5 14h2.5"
+                  fill="none"
+                  stroke="var(--pv-accent)"
+                  strokeWidth={2.2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </div>
+            <h1 className="text-sm font-semibold tracking-tight">PromptVault</h1>
+          </div>
+          <div className="min-w-0 flex-1">
+            <SearchBar value={searchQuery} onChange={setSearchQuery} />
+          </div>
+          <div className="shrink-0">
+            <button
+              type="button"
+              aria-label="Sign out"
+              title="Sign out"
+              className="pv-icon-button pv-focus"
+              onClick={async () => {
+                await clearAuth()
+                onSignOut()
+              }}>
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
+        </div>
 
             <div className="mb-3 flex items-center gap-1.5">
               <SpaceSelector
@@ -687,7 +640,5 @@ export function App() {
             </p>
           </Modal>
         </div>
-      </Show>
-    </>
   )
 }

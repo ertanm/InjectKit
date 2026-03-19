@@ -34,23 +34,16 @@ Copy the example and fill in your values:
 cp .env.example .env
 ```
 
-For **local development without Clerk/Stripe**, the defaults work out of the box:
+For **local development without Stripe**, the defaults work out of the box:
 
 ```env
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/promptvault?schema=public
 PORT=3000
 NODE_ENV=development
+JWT_SECRET=dev-secret-min-32-chars-for-local-development
 ```
 
-The server automatically creates a `dev-user` when no `Authorization` header is present, so you can test without Clerk keys.
-
-To enable **Clerk auth** (optional for local dev):
-1. Create a Clerk app at https://dashboard.clerk.com
-2. Add your keys to `.env`:
-   ```env
-   CLERK_PUBLISHABLE_KEY=pk_test_...
-   CLERK_SECRET_KEY=sk_test_...
-   ```
+With `ALLOW_DEV_AUTO_AUTH=true`, the server accepts requests without a token on localhost and uses a dev user. Otherwise, register via the extension and sign in with email/password.
 
 To enable **Stripe billing** (optional):
 1. Get test keys from https://dashboard.stripe.com/test/apikeys
@@ -250,7 +243,7 @@ promptextension/
 │   ├── index.ts              # Server entry point
 │   ├── app.ts                # Express app (all routes)
 │   ├── db.ts                 # Prisma client init
-│   ├── config.ts             # Auth resolver (Clerk / dev user)
+│   ├── config.ts             # Auth resolver (JWT / dev user)
 │   ├── schemas.ts            # Zod validation schemas
 │   ├── billing.ts            # Stripe checkout, webhooks, plan enforcement
 │   ├── versions.ts           # Version history API (Pro)

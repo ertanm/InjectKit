@@ -29,33 +29,11 @@ describe("Security configuration", () => {
     process.env.CORS_ORIGINS = originalCors
   })
 
-  it("does not allow dev auto-auth when NODE_ENV is production", async () => {
-    const originalNodeEnv = process.env.NODE_ENV
-    const originalDevAutoAuth = process.env.ALLOW_DEV_AUTO_AUTH
-
-    vi.resetModules()
-    process.env.NODE_ENV = "production"
-    process.env.ALLOW_DEV_AUTO_AUTH = "true"
-
-    vi.doMock("@clerk/express", () => ({
-      getAuth: () => ({ userId: undefined }),
-    }))
-
+  it("does not allow unauthenticated access", async () => {
     const { resolveUserId, AuthError } = await import("../config.js")
-    const req = { ip: "127.0.0.1", headers: {} } as any
+    const req = { userId: undefined } as any
 
-    await expect(resolveUserId(req)).rejects.toBeInstanceOf(AuthError)
-
-    if (originalNodeEnv === undefined) {
-      delete process.env.NODE_ENV
-    } else {
-      process.env.NODE_ENV = originalNodeEnv
-    }
-    if (originalDevAutoAuth === undefined) {
-      delete process.env.ALLOW_DEV_AUTO_AUTH
-    } else {
-      process.env.ALLOW_DEV_AUTO_AUTH = originalDevAutoAuth
-    }
+    expect(() => resolveUserId(req)).toThrow(AuthError)
   })
 })
 

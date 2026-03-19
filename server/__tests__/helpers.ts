@@ -1,5 +1,6 @@
+import bcrypt from "bcryptjs"
 import { initPrisma, getPrisma } from "../db.js"
-import { DEV_CLERK_ID, resetDevUserCache } from "../config.js"
+import { DEV_EMAIL } from "../middleware.js"
 
 export async function setupTestDb() {
   await initPrisma()
@@ -9,14 +10,14 @@ export async function setupTestDb() {
 export async function cleanDb() {
   const prisma = getPrisma()
   await prisma.$queryRaw`TRUNCATE TABLE "Prompt", "Space", "User" CASCADE`
-  resetDevUserCache()
 }
 
 export async function getOrCreateDevUser() {
   const prisma = getPrisma()
+  const hash = bcrypt.hashSync("dev", 12)
   return prisma.user.upsert({
-    where: { clerkId: DEV_CLERK_ID },
-    create: { clerkId: DEV_CLERK_ID },
+    where: { email: DEV_EMAIL },
+    create: { email: DEV_EMAIL, passwordHash: hash },
     update: {},
   })
 }

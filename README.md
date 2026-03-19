@@ -64,7 +64,7 @@ The `promptextension/server` directory contains the API used by the extension. A
 3. Start the container with the required environment variables:
 
    - `DATABASE_URL` – Postgres connection string (required).
-   - `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` – real Clerk keys (required in production).
+   - `JWT_SECRET` – 64-char random string for signing JWTs (required in production).
    - `CORS_ORIGINS` – comma-separated list of allowed origins. **In production this must not be empty.**
    - `NODE_ENV=production`
    - Optional: `SENTRY_DSN`, `REDIS_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.

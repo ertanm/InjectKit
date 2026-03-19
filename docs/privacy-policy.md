@@ -9,8 +9,8 @@ PromptVault ("we", "us", "our") is a browser extension and cloud service that he
 ## 2. Data We Collect
 
 ### Account Data
-- Email address (via Clerk authentication)
-- Authentication tokens (session management)
+- Email address and password hash (stored securely, never plaintext)
+- JWT tokens for session management (stored in extension local storage)
 
 ### User Content
 - Prompt titles, bodies, and tags you create
@@ -45,7 +45,7 @@ PromptVault ("we", "us", "our") is a browser extension and cloud service that he
 
 - All data is stored on servers in the **European Union** (Railway EU region)
 - Data is encrypted in transit (TLS 1.3) and at rest
-- We use Clerk for authentication (SOC 2 Type II certified)
+- We use bcrypt for password hashing and JWT for session tokens
 - We use Stripe for payments (PCI DSS Level 1 certified)
 
 ## 6. Your Rights (GDPR)
@@ -72,7 +72,7 @@ To exercise these rights, contact us at privacy@promptvault.dev.
 
 | Service | Purpose | Data Shared |
 |---------|---------|-------------|
-| Clerk | Authentication | Email, auth tokens |
+| (Self-hosted) | Authentication | Email, password hash, JWT tokens |
 | Stripe | Payments | Customer ID, subscription status |
 | Sentry | Error tracking | Anonymized error reports |
 | Posthog | Product analytics | Anonymized usage events |

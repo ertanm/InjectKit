@@ -39,7 +39,7 @@ billingRouter.post("/api/billing/checkout", async (req: Request, res: Response) 
     let customerId = user.stripeCustomerId
     if (!customerId) {
       const customer = await getStripe().customers.create({
-        metadata: { userId: user.id, clerkId: user.clerkId },
+        metadata: { userId: user.id },
       })
       customerId = customer.id
       await prisma.user.update({

@@ -28,8 +28,7 @@ This ensures Railway builds from the correct folder and finds the Dockerfile.
 | Variable | How to set |
 |----------|------------|
 | DATABASE_URL | Add Reference from Postgres service |
-| CLERK_PUBLISHABLE_KEY | `pk_live_...` from Clerk |
-| CLERK_SECRET_KEY | `sk_live_...` from Clerk |
+| JWT_SECRET | 64-char random string (e.g. `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`) |
 | NODE_ENV | `production` |
 | CORS_ORIGINS | `chrome-extension://YOUR_EXTENSION_ID` |
 

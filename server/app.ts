@@ -1,15 +1,17 @@
-import { clerkMiddleware } from "@clerk/express"
 import cors from "cors"
 import express from "express"
 import type { Request, Response } from "express"
 import rateLimit from "express-rate-limit"
 import morgan from "morgan"
+import { z } from "zod"
 
+import { hashPassword, signToken, verifyPassword } from "./auth.js"
 import { analyticsRouter } from "./analytics.js"
 import { billingRouter, checkPromptLimit } from "./billing.js"
 import { AuthError, resolveUserId } from "./config.js"
 import { getPrisma } from "./db.js"
 import { importExportRouter } from "./import-export.js"
+import { requireAuth } from "./middleware.js"
 import {
   createPromptSchema,
   createSpaceSchema,
@@ -23,6 +25,16 @@ import { getEnv } from "./env.js"
 import { Sentry } from "./sentry.js"
 
 const env = getEnv()
+
+const registerSchema = z.object({
+  email: z.string().email("Invalid email"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+})
+
+const loginSchema = z.object({
+  email: z.string().email("Invalid email"),
+  password: z.string().min(1, "Password is required"),
+})
 
 const app = express()
 app.disable("etag")
@@ -93,23 +105,7 @@ app.get("/api/health", async (_req: Request, res: Response) => {
   }
 })
 
-const hasClerkKeys =
-  env.CLERK_PUBLISHABLE_KEY &&
-  !env.CLERK_PUBLISHABLE_KEY.includes("...") &&
-  env.CLERK_SECRET_KEY &&
-  !env.CLERK_SECRET_KEY.includes("...")
-
 if (process.env.NODE_ENV !== "test") {
-  if (!hasClerkKeys && env.NODE_ENV === "production") {
-    // In production, valid Clerk keys are required. Fail fast rather than
-    // running the API in an unauthenticated mode.
-    throw new Error(
-      "CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY must be set with real values in production."
-    )
-  }
-  if (hasClerkKeys) {
-    app.use(clerkMiddleware())
-  }
   app.use(
     "/api/",
     rateLimit({
@@ -121,6 +117,84 @@ if (process.env.NODE_ENV !== "test") {
     })
   )
 }
+
+// ─── Auth (no requireAuth) ───────────────────────────────────
+
+app.post("/api/auth/register", async (req: Request, res: Response) => {
+  const parsed = registerSchema.safeParse(req.body)
+  if (!parsed.success) {
+    const msg = parsed.error.flatten().fieldErrors
+    return res.status(400).json({ error: "Validation failed", details: msg })
+  }
+  const prisma = getPrisma()
+  const existing = await prisma.user.findUnique({
+    where: { email: parsed.data.email.toLowerCase() },
+  })
+  if (existing) {
+    return res.status(409).json({ error: "Email already registered" })
+  }
+  const passwordHash = await hashPassword(parsed.data.password)
+  const user = await prisma.user.create({
+    data: {
+      email: parsed.data.email.toLowerCase(),
+      passwordHash,
+    },
+  })
+  const token = signToken(user.id)
+  return res.status(201).json({
+    token,
+    user: { id: user.id, email: user.email },
+  })
+})
+
+app.post("/api/auth/login", async (req: Request, res: Response) => {
+  const parsed = loginSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() })
+  }
+  const prisma = getPrisma()
+  const user = await prisma.user.findUnique({
+    where: { email: parsed.data.email.toLowerCase() },
+  })
+  if (!user) {
+    return res.status(401).json({ error: "Invalid email or password" })
+  }
+  const valid = await verifyPassword(parsed.data.password, user.passwordHash)
+  if (!valid) {
+    return res.status(401).json({ error: "Invalid email or password" })
+  }
+  const token = signToken(user.id)
+  return res.json({
+    token,
+    user: { id: user.id, email: user.email },
+  })
+})
+
+// Protected API routes: require auth (except register, login, health)
+app.use("/api", (req: Request, res: Response, next) => {
+  const p = req.path
+  const isPublic =
+    p === "/api/auth/register" ||
+    p === "/api/auth/login" ||
+    p === "/api/health"
+  if (isPublic) return next()
+  return requireAuth(req, res, next)
+})
+
+app.get("/api/auth/me", async (req: Request, res: Response) => {
+  try {
+    const userId = resolveUserId(req)
+    const prisma = getPrisma()
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { id: true, email: true, plan: true },
+    })
+    return res.json(user)
+  } catch (err) {
+    if (err instanceof AuthError) return res.status(401).json({ error: err.message })
+    throw err
+  }
+})
 
 // ─── Spaces ────────────────────────────────────────────────
 
