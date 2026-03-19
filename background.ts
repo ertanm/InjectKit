@@ -27,11 +27,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return
   }
 
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  // Use lastFocusedWindow: when popup opens, currentWindow can be the popup (no tabs)
+  chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
     const tab = tabs[0]
     if (tab?.id) {
       chrome.tabs.sendMessage(tab.id, message)
-      window.close?.()
+      // Popup closes when user interacts; window doesn't exist in MV3 service worker
     }
   })
   sendResponse({ ok: true })

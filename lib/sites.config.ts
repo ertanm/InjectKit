@@ -10,11 +10,15 @@ export const siteConfigs: SiteConfig[] = [
   {
     name: "ChatGPT",
     hostPatterns: ["chat.openai.com", "chatgpt.com"],
-    inputSelector: "#prompt-textarea",
+    // ChatGPT switched from textarea to contenteditable div; try both
+    inputSelector: 'div[contenteditable="true"][id="prompt-textarea"]',
     inputType: "contenteditable",
     fallbackSelectors: [
+      'div[contenteditable="true"][data-virtualkeyboard="true"]',
+      'div[contenteditable="true"].ProseMirror',
+      "textarea#prompt-textarea",
+      "#prompt-textarea",
       'textarea[data-id="root"]',
-      'div[contenteditable="true"][id="prompt-textarea"]',
     ],
   },
   {
