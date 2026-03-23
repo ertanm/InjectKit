@@ -5,7 +5,16 @@
   "description": "Save, organize, and inject AI prompts into any chat interface.",
   "author": "Highpriesst",
   "manifest": {
-    "permissions": ["storage"],
+    "commands": {
+      "open-promptvault": {
+        "suggested_key": {
+          "default": "Ctrl+K",
+          "mac": "Command+K"
+        },
+        "description": "Open PromptVault"
+      }
+    },
+    "permissions": ["storage", "scripting"],
     "content_security_policy": {
       "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none';"
     },
@@ -14,6 +23,7 @@
       "https://chatgpt.com/*",
       "https://claude.ai/*",
       "https://v0.dev/*",
+      "https://v0.app/*",
       "https://promptkit-railway-api-production.up.railway.app/*"
     ]
   },

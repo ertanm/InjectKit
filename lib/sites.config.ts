@@ -33,10 +33,17 @@ export const siteConfigs: SiteConfig[] = [
   },
   {
     name: "v0",
-    hostPatterns: ["v0.dev"],
-    inputSelector: "textarea",
-    inputType: "textarea",
-    fallbackSelectors: ['textarea[placeholder]'],
+    hostPatterns: ["v0.dev", "www.v0.dev", "v0.app", "www.v0.app"],
+    // v0 chat uses contenteditable/ProseMirror (similar to Claude); fallback to textarea
+    inputSelector: 'div[contenteditable="true"].ProseMirror',
+    inputType: "prosemirror",
+    fallbackSelectors: [
+      'div[contenteditable="true"]',
+      '[role="textbox"]',
+      'textarea[placeholder]',
+      'textarea',
+      'form textarea',
+    ],
   },
 ]
 

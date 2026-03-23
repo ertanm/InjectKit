@@ -8,6 +8,7 @@ const baseHostPermissions = [
   "https://chatgpt.com/*",
   "https://claude.ai/*",
   "https://v0.dev/*",
+  "https://v0.app/*",
 ]
 
 const hostPermissions = isDevBuild
@@ -17,7 +18,7 @@ const hostPermissions = isDevBuild
     : baseHostPermissions
 
 export const manifest: Partial<chrome.runtime.Manifest> = {
-  permissions: ["storage"],
+  permissions: ["storage", "scripting"],
   host_permissions: hostPermissions,
   content_security_policy: {
     extension_pages:
@@ -34,7 +35,8 @@ export const manifest: Partial<chrome.runtime.Manifest> = {
             "https://chat.openai.com/*",
             "https://chatgpt.com/*",
             "https://claude.ai/*",
-            "https://v0.dev/*"
+            "https://v0.dev/*",
+            "https://v0.app/*"
           ],
           resources: []
         }

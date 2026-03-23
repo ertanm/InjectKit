@@ -44,19 +44,35 @@ pnpm verify:prod-manifest
 
 This verifies: no localhost in manifest or bundle, strict CSP, no dev-only permissions.
 
-## Submit to the webstores
+## Privacy policy and terms (Chrome Web Store)
 
-The easiest way to deploy your Plasmo extension is to use the built-in [bpp](https://bpp.browser.market) GitHub action. Prior to using this action however, make sure to build your extension and upload the first version to the store to establish the basic credentials. Then, simply follow [this setup instruction](https://docs.plasmo.com/framework/workflows/submit) and you should be on your way for automated submission!
+The API serves public HTML on the same host (`server/legal-pages.ts`):
+
+- `GET /privacy` — from `docs/privacy-policy.md`
+- `GET /terms` — from `docs/terms-of-service.md`
+- `GET /billing/success` and `GET /billing/cancel` — Stripe Checkout return pages
+
+Use `https://YOUR_API_HOST/privacy` as the **Privacy policy URL** in the Chrome Developer Dashboard.
+
+## Stripe and Sentry (production)
+
+- **`BASE_URL`** — Public HTTPS origin of this API (e.g. your Railway URL) so Stripe Checkout success/cancel and billing portal `return_url` resolve correctly.
+- **Stripe webhook** — `POST https://YOUR_API_HOST/api/webhooks/stripe`; set **`STRIPE_WEBHOOK_SECRET`**. Configure **`STRIPE_PRICE_MONTHLY`** and **`STRIPE_PRICE_YEARLY`** (Stripe Price IDs).
+- **`SENTRY_DSN`** — Optional; enables server error reporting (`server/sentry.ts`).
+
+## Submit to the web stores
+
+Workflow: [`.github/workflows/submit.yml`](.github/workflows/submit.yml). Set repository secrets **`PLASMO_PUBLIC_API_URL`** (same HTTPS URL as production API) and **`SUBMIT_KEYS`**. Upload the first build to the Chrome Web Store manually once, then use [Plasmo submit / bpp](https://docs.plasmo.com/framework/workflows/submit).
 
 ## Running the API in production
 
-The `promptextension/server` directory contains the API used by the extension. A typical production deployment looks like:
+The `server` directory contains the API used by the extension. A typical production deployment looks like:
 
 1. Build and publish the Docker image defined in `promptextension/Dockerfile`.
 2. Run database migrations with Prisma:
 
    ```bash
-   cd promptextension/server
+   cd server
    pnpm db:generate
    pnpm prisma migrate deploy --schema=../prisma/schema.prisma
    ```
@@ -66,8 +82,11 @@ The `promptextension/server` directory contains the API used by the extension. A
    - `DATABASE_URL` – Postgres connection string (required).
    - `JWT_SECRET` – 64-char random string for signing JWTs (required in production).
    - `CORS_ORIGINS` – comma-separated list of allowed origins. **In production this must not be empty.**
+   - `BASE_URL` – Public HTTPS origin of the API (for Stripe success/cancel and billing portal URLs).
    - `NODE_ENV=production`
-   - Optional: `SENTRY_DSN`, `REDIS_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
+   - Optional: `SENTRY_DSN`, `REDIS_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`.
+
+CI runs server tests and a production extension build in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 The server performs startup validation of critical env vars and will refuse to start if:
 

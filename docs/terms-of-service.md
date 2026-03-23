@@ -1,6 +1,6 @@
 # PromptVault Terms of Service
 
-**Last updated:** March 15, 2026
+**Last updated:** March 21, 2026
 
 ## 1. Acceptance of Terms
 
@@ -19,8 +19,8 @@ PromptVault is a browser extension and cloud service for saving, organizing, and
 ## 4. Free and Pro Plans
 
 - **Free plan**: Up to 50 prompts, basic features
-- **Pro plan**: Unlimited prompts, version history, analytics, team sharing
-- Pricing: EUR 8.99/month or EUR 89/year
+- **Pro plan**: Unlimited prompts, version history, usage analytics, and import/export features available through the API; the extension may not expose every Pro capability in the UI yet
+- Pricing: EUR 8.99/month or EUR 89/year (subject to change; see checkout)
 
 ## 5. Acceptable Use
 
@@ -38,7 +38,7 @@ You agree not to:
 
 ## 7. Service Availability
 
-- We strive for 99.9% uptime but do not guarantee it
+- We strive for high uptime but do not guarantee it
 - We may perform maintenance with reasonable notice
 - We reserve the right to modify or discontinue features
 

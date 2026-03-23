@@ -15,6 +15,8 @@ In Railway: **Service Settings → General → Root Directory** = `promptextensi
 
 This ensures Railway builds from the correct folder and finds the Dockerfile.
 
+The Docker image includes `docs/` so the API can render `GET /privacy` and `GET /terms` from `docs/privacy-policy.md` and `docs/terms-of-service.md`. After deploy, use `https://YOUR_PUBLIC_HOST/privacy` as the Chrome Web Store privacy policy URL. Stripe webhook endpoint: `POST https://YOUR_PUBLIC_HOST/api/webhooks/stripe` (set `STRIPE_WEBHOOK_SECRET` in Stripe and Railway).
+
 ## 2. Add PostgreSQL and DATABASE_URL
 
 1. In your Railway project: **+ New** → **Database** → **PostgreSQL**
@@ -30,7 +32,9 @@ This ensures Railway builds from the correct folder and finds the Dockerfile.
 | DATABASE_URL | Add Reference from Postgres service |
 | JWT_SECRET | 64-char random string (e.g. `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`) |
 | NODE_ENV | `production` |
-| CORS_ORIGINS | `chrome-extension://YOUR_EXTENSION_ID` |
+| BASE_URL | Public HTTPS origin of this service (e.g. `https://YOUR_SERVICE.up.railway.app`) — required for Stripe Checkout and billing portal return URLs |
+| CORS_ORIGINS | Non-empty (e.g. your marketing site). The API always allows `chrome-extension://` origins for the extension. |
+| SENTRY_DSN, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_MONTHLY, STRIPE_PRICE_YEARLY | Optional; set when using Sentry and Stripe |
 
 ## 4. Trigger Redeploy
 

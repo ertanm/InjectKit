@@ -90,21 +90,33 @@ billingRouter.post("/api/billing/portal", async (req: Request, res: Response) =>
   }
 })
 
-billingRouter.post("/api/webhooks/stripe", async (req: Request, res: Response) => {
+/**
+ * Must be mounted with express.raw({ type: "application/json" }) so Stripe
+ * signature verification receives the exact request body bytes.
+ */
+export async function handleStripeWebhook(req: Request, res: Response): Promise<void> {
   const sig = req.headers["stripe-signature"]
   if (!sig || !process.env.STRIPE_WEBHOOK_SECRET) {
-    return res.status(400).json({ error: "Missing signature" })
+    res.status(400).json({ error: "Missing signature" })
+    return
+  }
+
+  const rawBody = req.body
+  if (!Buffer.isBuffer(rawBody)) {
+    res.status(400).json({ error: "Invalid body" })
+    return
   }
 
   let event: Stripe.Event
   try {
     event = getStripe().webhooks.constructEvent(
-      JSON.stringify(req.body),
+      rawBody,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET,
     )
   } catch {
-    return res.status(400).json({ error: "Invalid signature" })
+    res.status(400).json({ error: "Invalid signature" })
+    return
   }
 
   const prisma = getPrisma()
@@ -141,8 +153,8 @@ billingRouter.post("/api/webhooks/stripe", async (req: Request, res: Response) =
     }
   }
 
-  return res.json({ received: true })
-})
+  res.json({ received: true })
+}
 
 export async function checkPromptLimit(userId: string): Promise<boolean> {
   const prisma = getPrisma()

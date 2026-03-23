@@ -1,6 +1,6 @@
 # PromptVault Privacy Policy
 
-**Last updated:** March 15, 2026
+**Last updated:** March 21, 2026
 
 ## 1. Introduction
 
@@ -18,19 +18,22 @@ PromptVault ("we", "us", "our") is a browser extension and cloud service that he
 - Version history of prompt edits (Pro users)
 
 ### Usage Data
-- Prompt injection frequency and target sites (Pro analytics, opt-in)
-- Error reports (via Sentry, anonymized)
-- Feature usage events (via Posthog, anonymized)
+- For **Pro** accounts, optional usage analytics stored by us: prompt injection frequency and target site (see [Analytics](#analytics) below)
+- Error reports (via Sentry, see below)
 
 ### Billing Data
 - Subscription status (Free/Pro)
 - Stripe customer ID (we do not store card numbers)
 
+### Analytics
+
+We do **not** use third-party product-analytics SDKs (such as PostHog or Google Analytics) in the extension. Pro usage statistics may be recorded on our own servers when you use features that rely on that data.
+
 ## 3. Data We Do NOT Collect
 
 - We do not read or store the content of AI conversations
 - We do not track browsing history beyond supported AI chat sites
-- We do not use tracking cookies
+- We do not use tracking cookies for advertising
 - We do not sell or share personal data with third parties for advertising
 
 ## 4. How We Use Your Data
@@ -38,13 +41,13 @@ PromptVault ("we", "us", "our") is a browser extension and cloud service that he
 - To provide the PromptVault service (storing and syncing your prompts)
 - To authenticate your account
 - To process payments (via Stripe)
-- To improve the product (anonymized analytics)
+- To improve reliability (error monitoring via Sentry, aggregated)
 - To send transactional emails (account-related only)
 
 ## 5. Data Storage and Security
 
-- All data is stored on servers in the **European Union** (Railway EU region)
-- Data is encrypted in transit (TLS 1.3) and at rest
+- Data is hosted on **Railway**; configure your deployment region to meet your residency needs (e.g. EU for GDPR)
+- Data is encrypted in transit (TLS) and at rest where supported by the infrastructure
 - We use bcrypt for password hashing and JWT for session tokens
 - We use Stripe for payments (PCI DSS Level 1 certified)
 
@@ -66,17 +69,16 @@ To exercise these rights, contact us at privacy@promptvault.dev.
 - Account data is retained while your account is active
 - Prompt data is retained until you delete it or close your account
 - Deleted prompts are soft-deleted and permanently purged after 30 days
-- Anonymized analytics data may be retained indefinitely
+- Aggregated or operational metrics may be retained as needed for the service
 
 ## 8. Third-Party Services
 
 | Service | Purpose | Data Shared |
 |---------|---------|-------------|
-| (Self-hosted) | Authentication | Email, password hash, JWT tokens |
+| PromptVault (self-hosted API) | Authentication, prompts, optional Pro analytics | Email, password hash, JWT tokens, user content |
 | Stripe | Payments | Customer ID, subscription status |
-| Sentry | Error tracking | Anonymized error reports |
-| Posthog | Product analytics | Anonymized usage events |
-| Railway | Hosting | All data (EU servers) |
+| Sentry | Error tracking | Technical error reports (may include anonymized context) |
+| Railway | Hosting | Data processed by the service |
 
 ## 9. Changes to This Policy
 

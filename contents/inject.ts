@@ -8,6 +8,7 @@ export const config: PlasmoCSConfig = {
     "https://chatgpt.com/*",
     "https://claude.ai/*",
     "https://v0.dev/*",
+    "https://v0.app/*",
   ],
   run_at: "document_idle",
 }

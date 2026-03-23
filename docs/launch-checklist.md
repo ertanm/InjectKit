@@ -5,7 +5,7 @@
 - [ ] Chrome Web Store listing submitted and approved
 - [ ] Firefox Add-ons listing submitted
 - [ ] Landing page live at domain
-- [ ] CORS_ORIGINS set for production API (REQUIRED IN PRODUCTION — leaving this empty allows all browser origins)
+- [ ] CORS_ORIGINS set for production API (required non-empty; the API also allows all `chrome-extension://` origins for the extension)
 - [ ] Stripe checkout working in production
 - [ ] Demo video recorded (<90s)
 - [ ] ProductHunt listing drafted
@@ -30,7 +30,7 @@
 ### Monitoring (All Week)
 - [ ] Sentry dashboard: Check for P0 errors every 2 hours
 - [ ] Stripe dashboard: Monitor conversion rate
-- [ ] Posthog: Track install → signup → Pro funnel
+- [ ] Product funnel metrics: optional (first-party Pro usage in API; no third-party analytics SDK required for launch)
 - [ ] Railway metrics: API latency, CPU, memory
 
 ### Targets

@@ -7,7 +7,7 @@ import { z } from "zod"
 
 import { hashPassword, signToken, verifyPassword } from "./auth.js"
 import { analyticsRouter } from "./analytics.js"
-import { billingRouter, checkPromptLimit } from "./billing.js"
+import { billingRouter, checkPromptLimit, handleStripeWebhook } from "./billing.js"
 import { AuthError, resolveUserId } from "./config.js"
 import { getPrisma } from "./db.js"
 import { importExportRouter } from "./import-export.js"
@@ -23,6 +23,12 @@ import { teamsRouter } from "./teams.js"
 import { createVersionOnUpdate, versionsRouter } from "./versions.js"
 import { getEnv } from "./env.js"
 import { Sentry } from "./sentry.js"
+import {
+  renderBillingCancelHtml,
+  renderBillingSuccessHtml,
+  renderPrivacyHtml,
+  renderTermsHtml,
+} from "./legal-pages.js"
 
 const env = getEnv()
 
@@ -57,6 +63,10 @@ app.use(
       if (!origin) {
         return callback(null, true)
       }
+      // Chrome extensions: each install gets a unique ID; allow any extension origin
+      if (origin.startsWith("chrome-extension://")) {
+        return callback(null, true)
+      }
       if (allowedOrigins.length === 0 && env.NODE_ENV !== "production") {
         // In non-production environments, allow all origins by default to
         // make local development and testing easier.
@@ -69,6 +79,16 @@ app.use(
     }
   })
 )
+
+// Stripe webhooks require the raw body for signature verification (must be before express.json).
+app.post(
+  "/api/webhooks/stripe",
+  express.raw({ type: "application/json" }),
+  (req: Request, res: Response) => {
+    void handleStripeWebhook(req, res)
+  },
+)
+
 app.use(express.json({ limit: "200kb" }))
 app.use("/api", (_req: Request, res: Response, next) => {
   res.setHeader(
@@ -82,6 +102,22 @@ app.use("/api", (_req: Request, res: Response, next) => {
 
 app.get("/", (_req: Request, res: Response) => {
   res.send("PromptVault API")
+})
+
+app.get("/privacy", (_req: Request, res: Response) => {
+  res.type("html").send(renderPrivacyHtml())
+})
+
+app.get("/terms", (_req: Request, res: Response) => {
+  res.type("html").send(renderTermsHtml())
+})
+
+app.get("/billing/success", (_req: Request, res: Response) => {
+  res.type("html").send(renderBillingSuccessHtml())
+})
+
+app.get("/billing/cancel", (_req: Request, res: Response) => {
+  res.type("html").send(renderBillingCancelHtml())
 })
 
 app.get("/health", async (_req: Request, res: Response) => {
@@ -176,7 +212,8 @@ app.use("/api", (req: Request, res: Response, next) => {
   const isPublic =
     p === "/api/auth/register" ||
     p === "/api/auth/login" ||
-    p === "/api/health"
+    p === "/api/health" ||
+    p === "/api/webhooks/stripe"
   if (isPublic) return next()
   return requireAuth(req, res, next)
 })
@@ -523,7 +560,7 @@ app.use(importExportRouter)
 
 // Error handler must be last to catch errors from all routes
 app.use(
-  (err: unknown, _req: Request, res: Response, _next: () => void) => {
+  (err: unknown, req: Request, res: Response, _next: () => void) => {
     if (Sentry && typeof Sentry.captureException === "function") {
       Sentry.captureException(err)
     }
@@ -532,7 +569,7 @@ app.use(
       return
     }
 
-    console.error("Unhandled application error:", err)
+    console.error(`[500] ${req.method} ${req.path}:`, err)
     res.status(500).json({ error: "Internal server error" })
   }
 )

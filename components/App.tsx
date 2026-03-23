@@ -162,7 +162,14 @@ export function App({ onSignOut }: AppProps) {
   }, [])
 
   const handleInject = useCallback((body: string) => {
-    chrome.runtime?.sendMessage?.({ type: "INJECT_PROMPT", body })
+    chrome.runtime?.sendMessage?.({ type: "INJECT_PROMPT", body }, (response?: { ok?: boolean; error?: string; details?: string }) => {
+      if (chrome.runtime?.lastError?.message?.includes("message port closed")) {
+        return
+      }
+      if (response && !response.ok) {
+        setError(response.details ?? response.error ?? "Injection failed")
+      }
+    })
   }, [])
 
   const handlePromptSave = useCallback(async () => {

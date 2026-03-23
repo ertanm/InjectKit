@@ -18,6 +18,7 @@ RUN cd server && npx tsc --outDir ./dist
 
 FROM base AS runner
 ENV NODE_ENV=production
+COPY docs/ /app/docs/
 COPY --from=deps /app/server/node_modules ./node_modules
 COPY --from=deps /app/server/package.json ./server/package.json
 COPY server/ ./server/
