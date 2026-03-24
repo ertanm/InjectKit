@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { clearAuth, saveToken } from "~lib/auth"
+import { Loader2 } from "lucide-react"
+import { z } from "zod"
+import { saveToken } from "~lib/auth"
 import { login, register, ApiError } from "~lib/api"
 import "~style.css"
 
@@ -11,23 +13,61 @@ type AuthScreenProps = {
   onSuccess: () => void
 }
 
+const signInSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Enter your email")
+    .email("Enter a valid email address"),
+  password: z.string().min(1, "Enter your password"),
+})
+
+const signUpSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Enter your email")
+    .email("Enter a valid email address"),
+  password: z.string().min(8, "Use at least 8 characters"),
+})
+
+type FieldErrors = Partial<Record<"email" | "password", string>>
+
 export function AuthScreen({ onSuccess }: AuthScreenProps) {
   const [mode, setMode] = useState<Mode>("signin")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+  const [apiError, setApiError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError(null)
+    setApiError(null)
+
+    const schema = mode === "signin" ? signInSchema : signUpSchema
+    const parsed = schema.safeParse({ email: email.trim(), password })
+    if (!parsed.success) {
+      const flat = parsed.error.flatten()
+      setFieldErrors({
+        email: flat.fieldErrors.email?.[0],
+        password: flat.fieldErrors.password?.[0],
+      })
+      return
+    }
+
+    setFieldErrors({})
     setIsLoading(true)
     try {
       if (mode === "signup") {
-        const { token, user } = await register(email.trim().toLowerCase(), password)
+        const { token, user } = await register(
+          parsed.data.email.toLowerCase(),
+          parsed.data.password,
+        )
         await saveToken(token, user)
       } else {
-        const { token, user } = await login(email.trim().toLowerCase(), password)
+        const { token, user } = await login(
+          parsed.data.email.toLowerCase(),
+          parsed.data.password,
+        )
         await saveToken(token, user)
       }
       onSuccess()
@@ -38,85 +78,115 @@ export function AuthScreen({ onSuccess }: AuthScreenProps) {
           : err instanceof Error
             ? err.message
             : "Something went wrong"
-      setError(msg)
+      setApiError(msg)
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="flex h-[600px] w-[400px] flex-col items-center justify-center overflow-hidden bg-[var(--pv-bg)] px-8">
-      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--pv-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--pv-accent-soft)_80%,transparent)]">
-        <svg
-          className="h-7 w-7 text-[var(--pv-accent-strong)]"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={1.5}>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 2.5l8 3.5v5c0 5.25-3.4 10.2-8 11.5C7.4 21.2 4 16.25 4 11V6l8-3.5z"
-          />
-        </svg>
+    <div className="flex h-[600px] w-[400px] flex-col items-center justify-center overflow-hidden bg-[var(--pv-bg)] px-6">
+      <div className="mb-8 w-full max-w-[340px] text-center">
+        <h1 className="text-2xl font-bold tracking-[-0.02em] leading-[1.1] text-[var(--pv-text)]">
+          PromptVault
+        </h1>
+        <p className="mt-2 text-sm text-[var(--pv-text-dim)]">
+          {mode === "signin" ? "Sign in to continue to your vault" : "Create your account"}
+        </p>
       </div>
-      <h1 className="mb-1 text-lg font-semibold tracking-tight text-[var(--pv-text)]">
-        PromptVault
-      </h1>
-      <p className="mb-6 text-sm text-[var(--pv-text-muted)]">
-        {mode === "signin" ? "Sign in to continue" : "Create an account"}
-      </p>
 
-      <form onSubmit={handleSubmit} className="w-full max-w-[280px] space-y-3">
-        <label className="block text-xs font-medium text-[var(--pv-text-muted)]">
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            className="pv-focus mt-1 h-9 w-full rounded-lg border border-[var(--pv-border)] bg-[var(--pv-surface)] px-3 text-xs text-[var(--pv-text)]"
-          />
-        </label>
-        <label className="block text-xs font-medium text-[var(--pv-text-muted)]">
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={mode === "signup" ? 8 : 1}
-            autoComplete={mode === "signin" ? "current-password" : "new-password"}
-            className="pv-focus mt-1 h-9 w-full rounded-lg border border-[var(--pv-border)] bg-[var(--pv-surface)] px-3 text-xs text-[var(--pv-text)]"
-          />
-        </label>
-        {mode === "signup" && (
-          <p className="text-[10px] text-[var(--pv-text-muted)]">
-            Password must be at least 8 characters
-          </p>
-        )}
-        {error && (
-          <div className="rounded-lg border border-red-400/30 bg-red-500/10 p-2 text-xs text-red-400">
-            {error}
+      <div
+        className="w-full max-w-[340px] rounded-xl border border-[var(--pv-border)] bg-[var(--pv-card)] p-8"
+        style={{
+          boxShadow: "0 0 80px -30px rgba(245, 158, 11, 0.08)",
+        }}>
+        <form className="flex flex-col gap-5" noValidate onSubmit={handleSubmit}>
+          {apiError ? (
+            <div
+              className="rounded-lg border border-[#F59E0B]/50 bg-[var(--pv-surface-muted)] px-4 py-3 text-sm text-[var(--pv-text)]"
+              role="alert">
+              {apiError}
+            </div>
+          ) : null}
+
+          <div className="flex flex-col gap-2">
+            <label htmlFor="pv-auth-email" className="text-sm font-medium text-[var(--pv-text)]">
+              Email
+            </label>
+            <input
+              id="pv-auth-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              aria-invalid={fieldErrors.email ? true : undefined}
+              aria-describedby={fieldErrors.email ? "pv-auth-email-error" : undefined}
+              className="pv-input"
+            />
+            {fieldErrors.email ? (
+              <p id="pv-auth-email-error" className="text-xs text-[#EF4444]" role="alert">
+                {fieldErrors.email}
+              </p>
+            ) : null}
           </div>
-        )}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="pv-button-primary pv-focus h-9 w-full">
-          {isLoading ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
-        </button>
-        <button
-          type="button"
-          className="pv-button-ghost pv-focus w-full text-center text-xs"
-          onClick={() => {
-            setMode(mode === "signin" ? "signup" : "signin")
-            setError(null)
-          }}>
-          {mode === "signin" ? "Create account" : "Already have an account? Sign in"}
-        </button>
-      </form>
+
+          <div className="flex flex-col gap-2">
+            <label htmlFor="pv-auth-password" className="text-sm font-medium text-[var(--pv-text)]">
+              Password
+            </label>
+            <input
+              id="pv-auth-password"
+              name="password"
+              type="password"
+              autoComplete={mode === "signin" ? "current-password" : "new-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              aria-invalid={fieldErrors.password ? true : undefined}
+              aria-describedby={fieldErrors.password ? "pv-auth-password-error" : undefined}
+              className="pv-input"
+            />
+            {fieldErrors.password ? (
+              <p id="pv-auth-password-error" className="text-xs text-[#EF4444]" role="alert">
+                {fieldErrors.password}
+              </p>
+            ) : null}
+            {mode === "signup" ? (
+              <p className="text-xs text-[var(--pv-text-dim)]">At least 8 characters</p>
+            ) : null}
+          </div>
+
+          <div className="shimmer-button">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="pv-button-primary pv-focus relative z-[1] h-11 w-full text-sm">
+              {isLoading ? (
+                <Loader2 className="mx-auto h-5 w-5 animate-spin" aria-hidden />
+              ) : mode === "signin" ? (
+                "Sign in"
+              ) : (
+                "Create account"
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <button
+        type="button"
+        className="pv-button-ghost pv-focus mt-8 w-full max-w-[340px] text-center text-sm"
+        onClick={() => {
+          setMode(mode === "signin" ? "signup" : "signin")
+          setApiError(null)
+          setFieldErrors({})
+        }}>
+        {mode === "signin"
+          ? "Need an account? Sign up"
+          : "Already have an account? Sign in"}
+      </button>
     </div>
   )
 }
