@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react"
-import { parsePromptVaultUser, type PromptVaultUser } from "~lib/popup-validation"
+import { parseInjectKitUser, type InjectKitUser } from "~lib/popup-validation"
 import { clearToken, getToken, TOKEN_STORAGE_KEY } from "./useAuth"
 
-const USER_CACHE_KEY = "promptvault_user" as const
+const USER_CACHE_KEY = "injectkit_user" as const
 
-export type { PromptVaultUser }
+export type { InjectKitUser }
 
-async function readUserCache(): Promise<PromptVaultUser | null> {
+async function readUserCache(): Promise<InjectKitUser | null> {
   try {
     const result = await chrome.storage.local.get(USER_CACHE_KEY)
     const raw = result[USER_CACHE_KEY]
@@ -14,13 +14,13 @@ async function readUserCache(): Promise<PromptVaultUser | null> {
       return null
     }
     const parsed: unknown = JSON.parse(raw)
-    return parsePromptVaultUser(parsed)
+    return parseInjectKitUser(parsed)
   } catch {
     return null
   }
 }
 
-async function writeUserCache(user: PromptVaultUser): Promise<void> {
+async function writeUserCache(user: InjectKitUser): Promise<void> {
   try {
     await chrome.storage.local.set({ [USER_CACHE_KEY]: JSON.stringify(user) })
   } catch {
@@ -68,11 +68,11 @@ function apiBase(): string | null {
 }
 
 export function useUser(): {
-  user: PromptVaultUser | null
+  user: InjectKitUser | null
   loading: boolean
   error: string | null
 } {
-  const [user, setUser] = useState<PromptVaultUser | null>(null)
+  const [user, setUser] = useState<InjectKitUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const fetchSeq = useRef(0)
@@ -115,6 +115,7 @@ export function useUser(): {
       try {
         const res = await fetch(`${base}/me`, {
           headers: { Authorization: `Bearer ${token}` },
+          signal: AbortSignal.timeout(10_000),
         })
 
         if (seq !== fetchSeq.current) {
@@ -122,13 +123,20 @@ export function useUser(): {
         }
 
         if (res.status === 401) {
-          try {
-            await clearToken()
-          } catch {
-            // ignore
+          const body = await res.json().catch(() => ({}))
+          const errorCode = (body as { error?: string }).error
+          // Only clear token for definitive auth failures, not transient issues
+          if (errorCode === "invalid_token" || errorCode === "token_revoked" || errorCode === "Unauthorized") {
+            try {
+              await clearToken()
+            } catch {
+              // ignore
+            }
+            await clearUserCache()
+            setUser(null)
+          } else {
+            setError(errorCode ?? "Authentication error")
           }
-          await clearUserCache()
-          setUser(null)
           setLoading(false)
           return
         }
@@ -148,7 +156,7 @@ export function useUser(): {
           return
         }
 
-        const parsed = parsePromptVaultUser(json)
+        const parsed = parseInjectKitUser(json)
         if (!parsed) {
           setError("Invalid response")
           setLoading(false)

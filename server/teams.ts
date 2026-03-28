@@ -128,6 +128,47 @@ teamsRouter.get("/api/spaces/:id/members", async (req: Request, res: Response) =
   }
 })
 
+teamsRouter.delete("/api/spaces/:id/members/:memberId", async (req: Request, res: Response) => {
+  try {
+    const userId = await resolveUserId(req)
+    const prisma = getPrisma()
+
+    const space = await prisma.space.findFirst({
+      where: { id: req.params.id },
+    })
+    if (!space) {
+      return res.status(404).json({ error: "Space not found" })
+    }
+
+    const isOwner = space.userId === userId
+    const isSelfRemoval = req.params.memberId === userId
+
+    // Owner cannot remove themselves — must transfer ownership or delete the space
+    if (isOwner && isSelfRemoval) {
+      return res.status(400).json({ error: "Owner cannot leave. Transfer ownership or delete the space." })
+    }
+
+    // Only the owner can remove other members; non-owners can only remove themselves
+    if (!isOwner && !isSelfRemoval) {
+      return res.status(403).json({ error: "Only the space owner can remove members" })
+    }
+
+    const member = await prisma.spaceMember.findFirst({
+      where: { spaceId: req.params.id, userId: req.params.memberId },
+    })
+    if (!member) {
+      return res.status(404).json({ error: "Member not found" })
+    }
+
+    await prisma.spaceMember.delete({ where: { id: member.id } })
+
+    return res.status(204).send()
+  } catch (err) {
+    if (err instanceof AuthError) return res.status(401).json({ error: err.message })
+    return res.status(500).json({ error: "Failed to remove member" })
+  }
+})
+
 teamsRouter.patch("/api/spaces/:id/members/:memberId", async (req: Request, res: Response) => {
   const parsed = updateRoleSchema.safeParse(req.body)
   if (!parsed.success) {

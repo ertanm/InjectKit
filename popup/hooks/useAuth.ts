@@ -72,7 +72,12 @@ export function useAuth(): {
       try {
         const stored = await getToken()
         if (!cancelled) {
-          setTokenState(stored)
+          if (stored && isTokenExpired(stored)) {
+            await clearToken()
+            setTokenState(null)
+          } else {
+            setTokenState(stored)
+          }
         }
       } finally {
         if (!cancelled) {

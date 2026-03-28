@@ -4,8 +4,16 @@ import { verifyToken } from "./auth.js"
 import { getPrisma } from "./db.js"
 
 export const DEV_EMAIL = "dev@localhost"
-const DEV_PASSWORD_HASH = bcrypt.hashSync("dev", 12)
 const isDevEnvironment = process.env.NODE_ENV === "development"
+
+/** Lazily computed so bcrypt.hashSync only runs in dev, not on every prod startup. */
+let _devPasswordHash: string | null = null
+function getDevPasswordHash(): string {
+  if (!_devPasswordHash) {
+    _devPasswordHash = bcrypt.hashSync("dev", 12)
+  }
+  return _devPasswordHash
+}
 
 function isLocalRequest(req: Request): boolean {
   const ip = req.ip ?? ""
@@ -29,7 +37,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     const prisma = getPrisma()
     const user = await prisma.user.upsert({
       where: { email: DEV_EMAIL },
-      create: { email: DEV_EMAIL, passwordHash: DEV_PASSWORD_HASH },
+      create: { email: DEV_EMAIL, passwordHash: getDevPasswordHash() },
       update: {},
     })
     req.userId = user.id
@@ -44,9 +52,21 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   try {
     const token = header.slice(7)
     const payload = verifyToken(token)
+
+    // Check tokenVersion against DB to support token revocation
+    const prisma = getPrisma()
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { tokenVersion: true },
+    })
+    if (!user || (payload.tokenVersion ?? 0) < user.tokenVersion) {
+      res.status(401).json({ error: "token_revoked" })
+      return
+    }
+
     req.userId = payload.userId
     next()
   } catch {
-    res.status(401).json({ error: "Invalid token" })
+    res.status(401).json({ error: "invalid_token" })
   }
 }

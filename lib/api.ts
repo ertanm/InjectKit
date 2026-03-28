@@ -37,18 +37,32 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   return { Authorization: `Bearer ${token}` }
 }
 
+/** Error codes from the server that indicate the token itself is invalid/revoked. */
+const TOKEN_CLEAR_ERRORS = new Set(["invalid_token", "token_revoked", "Unauthorized"])
+
+const FETCH_TIMEOUT_MS = 10_000
+
 async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   const headers = {
     ...((init?.headers as Record<string, string>) ?? {}),
     ...(await getAuthHeaders()),
   }
-  const res = await fetch(resolveApiUrl(path), { ...init, headers })
+  const res = await fetch(resolveApiUrl(path), {
+    ...init,
+    headers,
+    signal: init?.signal ?? AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  })
   if (res.status === 401) {
-    await clearAuth()
+    const body = await res.json().catch(() => ({}))
+    const errorCode = (body as { error?: string }).error
+    if (errorCode && TOKEN_CLEAR_ERRORS.has(errorCode)) {
+      await clearAuth()
+    }
+    throw new ApiError(res.status, errorCode ?? "Unauthorized")
   }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
-    throw new ApiError(res.status, body.error ?? `Request failed: ${res.status}`)
+    throw new ApiError(res.status, (body as { error?: string }).error ?? `Request failed: ${res.status}`)
   }
   return res
 }

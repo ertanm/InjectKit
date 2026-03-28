@@ -101,7 +101,7 @@ app.use("/api", (_req: Request, res: Response, next) => {
 })
 
 app.get("/", (_req: Request, res: Response) => {
-  res.send("PromptVault API")
+  res.send("InjectKit API")
 })
 
 app.get("/privacy", (_req: Request, res: Response) => {
@@ -176,7 +176,7 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
       passwordHash,
     },
   })
-  const token = signToken(user.id)
+  const token = signToken(user.id, user.tokenVersion)
   return res.status(201).json({
     token,
     user: { id: user.id, email: user.email },
@@ -199,21 +199,22 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
   if (!valid) {
     return res.status(401).json({ error: "Invalid email or password" })
   }
-  const token = signToken(user.id)
+  const token = signToken(user.id, user.tokenVersion)
   return res.json({
     token,
     user: { id: user.id, email: user.email },
   })
 })
 
-// Protected API routes: require auth (except register, login, health)
+// Protected API routes: require auth (except register, login, health, webhooks)
+// Inside app.use("/api", ...) Express strips the "/api" prefix from req.path
 app.use("/api", (req: Request, res: Response, next) => {
   const p = req.path
   const isPublic =
-    p === "/api/auth/register" ||
-    p === "/api/auth/login" ||
-    p === "/api/health" ||
-    p === "/api/webhooks/stripe"
+    p === "/auth/register" ||
+    p === "/auth/login" ||
+    p === "/health" ||
+    p === "/webhooks/stripe"
   if (isPublic) return next()
   return requireAuth(req, res, next)
 })
