@@ -1,4 +1,4 @@
-# PromptVault Browser Compatibility Matrix
+# InjectKit Browser Compatibility Matrix
 
 ## Build Targets
 

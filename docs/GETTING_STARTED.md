@@ -1,4 +1,4 @@
-# Getting Started with PromptVault
+# Getting Started with InjectKit
 
 ## Prerequisites
 
@@ -37,7 +37,7 @@ cp .env.example .env
 For **local development without Stripe**, the defaults work out of the box:
 
 ```env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/promptvault?schema=public
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/injectkit?schema=public
 PORT=3000
 NODE_ENV=development
 JWT_SECRET=dev-secret-min-32-chars-for-local-development
@@ -92,7 +92,7 @@ curl http://localhost:3000/health
 
 ---
 
-In production, configure `PLASMO_PUBLIC_API_URL` to an **HTTPS** URL (for example, `https://api.promptvault.com`) so the extension never sends tokens or prompt data over plain HTTP.
+In production, configure `PLASMO_PUBLIC_API_URL` to an **HTTPS** URL (for example, `https://api.injectkit.dev`) so the extension never sends tokens or prompt data over plain HTTP.
 
 ---
 
@@ -159,7 +159,7 @@ This creates a production build in `build/chrome-mv3-prod/`.
 2. Enable **Developer mode** (top-right toggle)
 3. Click **Load unpacked**
 4. Select the `promptextension/build/chrome-mv3-prod/` folder
-5. The PromptVault icon appears in your toolbar
+5. The InjectKit icon appears in your toolbar
 
 ### Load in Firefox (optional):
 
@@ -175,7 +175,7 @@ npm run build:firefox
 
 ## 6. Use the Extension
 
-1. **Click the PromptVault icon** in your toolbar to open the popup
+1. **Click the InjectKit icon** in your toolbar to open the popup
 2. Complete the **3-step onboarding tour**
 3. Select a space from the dropdown
 4. Browse your prompts, use the search bar to filter
@@ -185,7 +185,7 @@ npm run build:firefox
 
 ### Keyboard Shortcut
 
-Press **Cmd+K** (Mac) or **Ctrl+K** (Windows/Linux) on a supported site to open PromptVault.
+Press **Cmd+K** (Mac) or **Ctrl+K** (Windows/Linux) on a supported site to open InjectKit.
 
 ### Supported Inject Sites
 

@@ -1,14 +1,14 @@
-# PromptVault Terms of Service
+# InjectKit Terms of Service
 
 **Last updated:** March 21, 2026
 
 ## 1. Acceptance of Terms
 
-By using PromptVault, you agree to these Terms of Service. If you do not agree, do not use the service.
+By using InjectKit, you agree to these Terms of Service. If you do not agree, do not use the service.
 
 ## 2. Service Description
 
-PromptVault is a browser extension and cloud service for saving, organizing, and injecting AI prompts into chat interfaces.
+InjectKit is a browser extension and cloud service for saving, organizing, and injecting AI prompts into chat interfaces.
 
 ## 3. User Accounts
 
@@ -50,7 +50,7 @@ You agree not to:
 
 ## 9. Limitation of Liability
 
-PromptVault is provided "as is" without warranties. We are not liable for any indirect, incidental, or consequential damages.
+InjectKit is provided "as is" without warranties. We are not liable for any indirect, incidental, or consequential damages.
 
 ## 10. Governing Law
 
@@ -58,4 +58,4 @@ These terms are governed by the laws of the European Union and the applicable me
 
 ## 11. Contact
 
-For questions about these terms: legal@promptvault.dev
+For questions about these terms: legal@injectkit.dev

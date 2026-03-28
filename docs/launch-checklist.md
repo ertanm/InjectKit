@@ -1,4 +1,4 @@
-# PromptVault Launch Checklist
+# InjectKit Launch Checklist
 
 ## Pre-Launch (Sprint 9)
 

@@ -6,9 +6,9 @@ Save, organize, and instantly inject your best AI prompts into ChatGPT, Claude, 
 
 ## Full Description
 
-### PromptVault — Your AI Prompt Library
+### InjectKit — Your AI Prompt Library
 
-Stop re-typing the same prompts. PromptVault lets you save your best AI prompts and inject them into any AI chat from the extension popup.
+Stop re-typing the same prompts. InjectKit lets you save your best AI prompts and inject them into any AI chat from the extension popup.
 
 **How it works:**
 1. Save your frequently-used prompts organized by spaces and tags
@@ -67,7 +67,7 @@ English
 
 - **Single purpose:** Save and inject user-authored prompts on supported AI chat sites.
 - **storage:** Account session and local prompt cache.
-- **scripting:** Inject text into the chat input on sites you use with PromptVault.
-- **host_permissions:** Only the supported AI origins and your PromptVault API URL (for sync).
+- **scripting:** Inject text into the chat input on sites you use with InjectKit.
+- **host_permissions:** Only the supported AI origins and your InjectKit API URL (for sync).
 
 See also: [screenshot-checklist.md](./screenshot-checklist.md) for capture steps.

@@ -1,10 +1,10 @@
-# PromptVault Privacy Policy
+# InjectKit Privacy Policy
 
 **Last updated:** March 21, 2026
 
 ## 1. Introduction
 
-PromptVault ("we", "us", "our") is a browser extension and cloud service that helps users save, organize, and inject AI prompts. This Privacy Policy explains how we collect, use, and protect your data.
+InjectKit ("we", "us", "our") is a browser extension and cloud service that helps users save, organize, and inject AI prompts. This Privacy Policy explains how we collect, use, and protect your data.
 
 ## 2. Data We Collect
 
@@ -38,7 +38,7 @@ We do **not** use third-party product-analytics SDKs (such as PostHog or Google 
 
 ## 4. How We Use Your Data
 
-- To provide the PromptVault service (storing and syncing your prompts)
+- To provide the InjectKit service (storing and syncing your prompts)
 - To authenticate your account
 - To process payments (via Stripe)
 - To improve reliability (error monitoring via Sentry, aggregated)
@@ -62,7 +62,7 @@ Under the General Data Protection Regulation, you have the right to:
 - **Restrict** processing of your data
 - **Object** to processing of your data
 
-To exercise these rights, contact us at privacy@promptvault.dev.
+To exercise these rights, contact us at privacy@injectkit.dev.
 
 ## 7. Data Retention
 
@@ -75,7 +75,7 @@ To exercise these rights, contact us at privacy@promptvault.dev.
 
 | Service | Purpose | Data Shared |
 |---------|---------|-------------|
-| PromptVault (self-hosted API) | Authentication, prompts, optional Pro analytics | Email, password hash, JWT tokens, user content |
+| InjectKit (self-hosted API) | Authentication, prompts, optional Pro analytics | Email, password hash, JWT tokens, user content |
 | Stripe | Payments | Customer ID, subscription status |
 | Sentry | Error tracking | Technical error reports (may include anonymized context) |
 | Railway | Hosting | Data processed by the service |
@@ -86,4 +86,4 @@ We may update this Privacy Policy from time to time. We will notify users of sig
 
 ## 10. Contact
 
-For privacy-related inquiries: privacy@promptvault.dev
+For privacy-related inquiries: privacy@injectkit.dev
